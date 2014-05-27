@@ -14,11 +14,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <protobuf-c/protobuf-c.h>
 #include "protobuf-c-text.h"
 #include "protobuf-c-util.h"
-#include "config.h"
 
 /** A dynamic string struct.
  *
