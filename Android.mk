@@ -19,7 +19,7 @@ LOCAL_C_FLAGS := -std=c99 -pedantic -Wall -DHAVE_PROTOBUF_C_MESSAGE_CHECK
 
 # Use this variable when building with NDK out of tree
 #LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)
-#LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 LOCAL_COPY_HEADERS_TO := google/protobuf-c
 LOCAL_COPY_HEADERS := protobuf-c-text/protobuf-c-text.h
 
