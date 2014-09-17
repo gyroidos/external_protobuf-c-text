@@ -15,7 +15,7 @@ LOCAL_SRC_FILES := protobuf-c-text/generate.c
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/protobuf-c-text
 
-LOCAL_C_FLAGS := -std=c99 -pedantic -Wall -DHAVE_PROTOBUF_C_MESSAGE_CHECK
+LOCAL_CFLAGS := -std=c99 -pedantic -Wall -DHAVE_PROTOBUF_C_MESSAGE_CHECK
 
 # Use this variable when building with NDK out of tree
 #LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)
