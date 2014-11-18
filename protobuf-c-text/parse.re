@@ -956,7 +956,6 @@ state_value(State *state, Token *t)
 
     case TOK_NUMBER:
       switch (state->field->type) {
-        case PROTOBUF_C_TYPE_INT32:
         case PROTOBUF_C_TYPE_UINT32:
         case PROTOBUF_C_TYPE_FIXED32:
           val = strtoul(t->number, &end, 10);
@@ -987,6 +986,7 @@ state_value(State *state, Token *t)
           }
           break;
 
+        case PROTOBUF_C_TYPE_INT32:
         case PROTOBUF_C_TYPE_SINT32:
         case PROTOBUF_C_TYPE_SFIXED32:
           val = strtol(t->number, &end, 10);
@@ -1017,7 +1017,6 @@ state_value(State *state, Token *t)
           }
           break;
 
-        case PROTOBUF_C_TYPE_INT64:
         case PROTOBUF_C_TYPE_UINT64:
         case PROTOBUF_C_TYPE_FIXED64:
           val = strtoull(t->number, &end, 10);
@@ -1048,6 +1047,7 @@ state_value(State *state, Token *t)
           }
           break;
 
+        case PROTOBUF_C_TYPE_INT64:
         case PROTOBUF_C_TYPE_SINT64:
         case PROTOBUF_C_TYPE_SFIXED64:
           val = strtoll(t->number, &end, 10);
