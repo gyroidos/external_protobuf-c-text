@@ -420,6 +420,9 @@ token_start:
                 if (!t.number) {
                   RETURN(TOK_MALLOC_ERR);
                 }
+                if ((scanner->cursor - scanner->token) < 0) {
+                  RETURN(TOK_MALLOC_ERR);
+                }
                 memcpy(t.number, scanner->token,
                        scanner->cursor - scanner->token);
                 t.number[scanner->cursor - scanner->token] = '\0';
@@ -430,6 +433,9 @@ token_start:
   BW          {
                 t.bareword = PBC_ALLOC((scanner->cursor - scanner->token) + 1);
                 if (!t.bareword) {
+                  RETURN(TOK_MALLOC_ERR);
+                }
+                if ((scanner->cursor - scanner->token) < 0) {
                   RETURN(TOK_MALLOC_ERR);
                 }
                 memcpy(t.bareword, scanner->token,
