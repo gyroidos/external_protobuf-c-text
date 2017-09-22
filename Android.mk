@@ -33,3 +33,36 @@ LOCAL_GENERATED_SOURCES += $(GEN)
 
 include $(BUILD_STATIC_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := libprotobuf-c-text-host
+LOCAL_MODULE_TAGS := optional
+#LOCAL_PRELINK_MODULE := false
+LOCAL_MODULE_CLASS := STATIC_LIBRARIES
+LOCAL_IS_HOST_MODULE := 1
+
+LOCAL_STATIC_LIBRARIES := \
+	libprotobuf-c-host
+
+LOCAL_SRC_FILES := protobuf-c-text/generate.c
+#$(call all-c-files-under,protobuf-c-text)
+
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/protobuf-c-text
+
+LOCAL_CFLAGS := -std=gnu99 -pedantic -Wall -DHAVE_PROTOBUF_C_MESSAGE_CHECK
+
+# Use this variable when building with NDK out of tree
+#LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
+LOCAL_COPY_HEADERS_TO := google/protobuf-c
+LOCAL_COPY_HEADERS := protobuf-c-text/protobuf-c-text.h
+
+# compile parse.re to parse.c using re2c
+intermediates := $(local-generated-sources-dir)
+GEN := $(intermediates)/parse.c
+$(GEN): PRIVATE_CUSTOM_TOOL = re2c -s -o $@ $<
+$(GEN): $(LOCAL_PATH)/protobuf-c-text/parse.re
+	$(transform-generated-source)
+LOCAL_GENERATED_SOURCES += $(GEN)
+
+include $(BUILD_HOST_STATIC_LIBRARY)
+
