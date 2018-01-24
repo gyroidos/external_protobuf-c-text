@@ -24,12 +24,13 @@ LOCAL_COPY_HEADERS_TO := google/protobuf-c
 LOCAL_COPY_HEADERS := protobuf-c-text/protobuf-c-text.h
 
 # compile parse.re to parse.c using re2c
-intermediates := $(local-intermediates-dir)
-GEN := $(intermediates)/parse.c
+generated_sources:= $(local-generated-sources-dir)
+
+GEN := $(generated_sources)/parse.c
+
 $(GEN): PRIVATE_CUSTOM_TOOL = re2c -s -o $@ $<
 $(GEN): $(LOCAL_PATH)/protobuf-c-text/parse.re
 	$(transform-generated-source)
 LOCAL_GENERATED_SOURCES += $(GEN)
 
 include $(BUILD_STATIC_LIBRARY)
-
