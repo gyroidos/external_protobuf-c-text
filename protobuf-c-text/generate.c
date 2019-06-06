@@ -104,7 +104,7 @@ rs_append(ReturnString *rs, int guess,
  *         allocation error.
  */
 static char *
-esc_str(char *src, int len, ProtobufCAllocator *allocator)
+esc_str(unsigned char *src, int len, ProtobufCAllocator *allocator)
 {
   int i, escapes = 0, dst_len = 0;
   unsigned char *dst;
