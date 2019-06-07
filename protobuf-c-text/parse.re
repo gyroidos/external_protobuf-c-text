@@ -279,8 +279,13 @@ unesc_str(unsigned char *src, int len, ProtobufCAllocator *allocator)
           if (i + 2 < len
               && (src[i+1] >= '0' && src[i+1] <= '7')
               && (src[i+2] >= '0' && src[i+2] <= '7')) {
+            unsigned long ret_strtoul;
             memcpy(oct, src + i, 3);
-            dst[dst_len++] = (unsigned char)strtoul(oct, NULL, 8);
+            ret_strtoul = strtoul(oct, NULL, 8);
+            if (ret_strtoul > UCHAR_MAX) {
+              goto unesc_str_error;
+            }
+            dst[dst_len++] = ret_strtoul;
             i += 2;  /* Gets incremented again down below. */
           } else {
             /* Decoding a \0 failed or was cut off.. */
@@ -666,6 +671,10 @@ state_assignment(State *state, Token *t)
   ProtobufCMessage *msg;
 
   msg = state->msgs[state->current_msg];
+  if (NULL == state->field) {
+      return state_error(state, t, "field pointer NULL.");
+  }
+
   switch (t->id) {
     case TOK_COLON:
       if (state->field->type == PROTOBUF_C_TYPE_MESSAGE) {
@@ -777,6 +786,10 @@ state_value(State *state, Token *t)
   int64_t val;
 
   msg = state->msgs[state->current_msg];
+  if (NULL == state->field) {
+      return state_error(state, t, "field pointer NULL.");
+  }
+
   if (state->field->type != PROTOBUF_C_TYPE_STRING) {
     if (state->field->label == PROTOBUF_C_LABEL_OPTIONAL) {
       /* Do optional member accounting. */
@@ -947,31 +960,36 @@ state_value(State *state, Token *t)
       switch (state->field->type) {
         case PROTOBUF_C_TYPE_UINT32:
         case PROTOBUF_C_TYPE_FIXED32:
-          val = strtoul(t->number, &end, 10);
-          if (*end != '\0' || val > (uint64_t)UINT32_MAX) {
-            return state_error(state, t,
-                "Unable to convert '%s' for field '%s'.",
-                t->number, state->field->name);
-          }
-          if (state->field->label == PROTOBUF_C_LABEL_REPEATED) {
-            uint32_t *vals;
+          {
+            uint64_t val;
 
-            STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
-            n_members = STRUCT_MEMBER(size_t, msg,
-                                      state->field->quantifier_offset);
-            vals = local_realloc(
-                STRUCT_MEMBER(uint32_t *, msg, state->field->offset),
-                (n_members - 1) * sizeof(uint32_t),
-                n_members * sizeof(uint32_t), state->allocator);
-            if (!vals) {
-              return state_error(state, t, "Malloc failure.");
+            errno = 0;
+            val = strtoul(t->number, &end, 10);
+            if (*end != '\0' || val > UINT32_MAX) {
+              return state_error(state, t,
+                  "Unable to convert '%s' for field '%s'.",
+                  t->number, state->field->name);
             }
-            STRUCT_MEMBER(uint32_t *, msg, state->field->offset) = vals;
-            vals[n_members - 1] = (uint32_t)val;
-            return STATE_OPEN;
-          } else {
-            STRUCT_MEMBER(uint32_t, msg, state->field->offset) = (uint32_t)val;
-            return STATE_OPEN;
+            if (state->field->label == PROTOBUF_C_LABEL_REPEATED) {
+              uint32_t *vals;
+
+              STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
+              n_members = STRUCT_MEMBER(size_t, msg,
+                                        state->field->quantifier_offset);
+              vals = local_realloc(
+                  STRUCT_MEMBER(uint32_t *, msg, state->field->offset),
+                  (n_members - 1) * sizeof(uint32_t),
+                  n_members * sizeof(uint32_t), state->allocator);
+              if (!vals) {
+                return state_error(state, t, "Malloc failure.");
+              }
+              STRUCT_MEMBER(uint32_t *, msg, state->field->offset) = vals;
+              vals[n_members - 1] = (uint32_t)val;
+              return STATE_OPEN;
+            } else {
+              STRUCT_MEMBER(uint32_t, msg, state->field->offset) = (uint32_t)val;
+              return STATE_OPEN;
+            }
           }
           break;
 
@@ -1008,31 +1026,34 @@ state_value(State *state, Token *t)
 
         case PROTOBUF_C_TYPE_UINT64:
         case PROTOBUF_C_TYPE_FIXED64:
-          val = strtoull(t->number, &end, 10);
-          if (*end != '\0') {
-            return state_error(state, t,
-                "Unable to convert '%s' for field '%s'.",
-                t->number, state->field->name);
-          }
-          if (state->field->label == PROTOBUF_C_LABEL_REPEATED) {
-            uint64_t *vals;
+          {
+            uint64_t val, *vals;
 
-            STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
-            n_members = STRUCT_MEMBER(size_t, msg,
-                                      state->field->quantifier_offset);
-            vals = local_realloc(
-                STRUCT_MEMBER(uint64_t *, msg, state->field->offset),
-                (n_members - 1) * sizeof(uint64_t),
-                n_members * sizeof(uint64_t), state->allocator);
-            if (!vals) {
-              return state_error(state, t, "Malloc failure.");
+            errno = 0;
+            val = strtoull(t->number, &end, 10);
+            if (*end != '\0') {
+              return state_error(state, t,
+                  "Unable to convert '%s' for field '%s'.",
+                  t->number, state->field->name);
             }
-            STRUCT_MEMBER(uint64_t *, msg, state->field->offset) = vals;
-            vals[n_members - 1] = val;
-            return STATE_OPEN;
-          } else {
-            STRUCT_MEMBER(uint64_t, msg, state->field->offset) = val;
-            return STATE_OPEN;
+            if (state->field->label == PROTOBUF_C_LABEL_REPEATED) {
+              STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
+              n_members = STRUCT_MEMBER(size_t, msg,
+                                        state->field->quantifier_offset);
+              vals = local_realloc(
+                  STRUCT_MEMBER(uint64_t *, msg, state->field->offset),
+                  (n_members - 1) * sizeof(uint64_t),
+                  n_members * sizeof(uint64_t), state->allocator);
+              if (!vals) {
+                return state_error(state, t, "Malloc failure.");
+              }
+              STRUCT_MEMBER(uint64_t *, msg, state->field->offset) = vals;
+              vals[n_members - 1] = val;
+              return STATE_OPEN;
+            } else {
+              STRUCT_MEMBER(uint64_t, msg, state->field->offset) = val;
+              return STATE_OPEN;
+            }
           }
           break;
 
