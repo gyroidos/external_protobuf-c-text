@@ -30,8 +30,10 @@
       ((member_type *) STRUCT_MEMBER_P((struct_p), (struct_offset)))
 
 /** Free possibly using the pbc allocator. */
-#define PBC_FREE(ptr) (allocator? allocator->free(allocator->allocator_data, \
-                                                  ptr): free(ptr))
+#define PBC_FREE(ptr) do { if (ptr) { (allocator? \
+                              allocator->free(allocator->allocator_data, \
+                              ptr): free(ptr)); \
+                        } } while (0)
 
 /** Allocate possibly using the pbc allocator. */
 #define PBC_ALLOC(size) (allocator? \
@@ -39,10 +41,11 @@
                            malloc(size))
 
 /** Free possibly using the pbc allocator (state members). */
-#define ST_FREE(ptr) (state->allocator? \
-                        state->allocator->free(state->allocator-> \
+#define ST_FREE(ptr) do { if (ptr) { (state->allocator? \
+                              state->allocator->free(state->allocator-> \
                                                allocator_data, ptr): \
-                        free(ptr))
+                                               free(ptr)); \
+                        } } while (0)
 
 /** Allocate possibly using the pbc allocator (state members). */
 #define ST_ALLOC(size) (state->allocator? \
