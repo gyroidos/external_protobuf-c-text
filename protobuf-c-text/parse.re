@@ -1234,7 +1234,7 @@ protobuf_c_text_parse(const ProtobufCMessageDescriptor *descriptor,
   scanner_free(scanner, allocator);
   if (state.error) {
     result->error_txt = state.error_str;
-    if (msg) {
+    if (state.msgs[0]) {
       protobuf_c_message_free_unpacked(state.msgs[0], allocator);
     }
   } else {
