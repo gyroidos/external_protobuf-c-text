@@ -76,6 +76,21 @@ local_realloc(void *ptr,
   return tmp;
 }
 
+static void *
+local_reallocarray(void *ptr,
+    size_t old_size,
+    size_t nmemb,
+    size_t size,
+    ProtobufCAllocator *allocator)
+{
+  size_t n_size;
+  if (__builtin_mul_overflow(nmemb, size, &n_size)) {
+    errno = ENOMEM;
+    return NULL;
+  }
+  return local_realloc(ptr, old_size, n_size, allocator);
+}
+
 /** @} */  /* End of utility group. */
 
 /** \defgroup lexer Routines related to lexing text format protobufs
@@ -713,10 +728,10 @@ state_assignment(State *state, Token *t)
           STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
           n_members = STRUCT_MEMBER(size_t, msg,
                                     state->field->quantifier_offset);
-          tmp = local_realloc(
+          tmp = local_reallocarray(
               STRUCT_MEMBER(ProtobufCMessage *, msg, state->field->offset),
               (n_members - 1) * sizeof(ProtobufCMessage *),
-              n_members * sizeof(ProtobufCMessage *),
+              n_members, sizeof(ProtobufCMessage *),
               state->allocator);
           if (!tmp) {
             return state_error(state, t, "Malloc failure.");
@@ -732,9 +747,9 @@ state_assignment(State *state, Token *t)
           ProtobufCMessage **tmp_msgs;
 
           state->max_msg += 10;
-          tmp_msgs = local_realloc(
+          tmp_msgs = local_reallocarray(
               state->msgs, (state->current_msg) * sizeof(ProtobufCMessage *),
-              (state->max_msg) * sizeof(ProtobufCMessage *),
+              state->max_msg, sizeof(ProtobufCMessage *),
               state->allocator);
           if (!tmp_msgs) {
             return state_error(state, t, "Malloc failure.");
@@ -825,10 +840,10 @@ state_value(State *state, Token *t)
             STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
             n_members = STRUCT_MEMBER(size_t, msg,
                 state->field->quantifier_offset);
-            tmp = local_realloc(
+            tmp = local_reallocarray(
                 STRUCT_MEMBER(int *, msg, state->field->offset),
                 (n_members - 1) * sizeof(int),
-                n_members * sizeof(int), state->allocator);
+                n_members, sizeof(int), state->allocator);
             if (!tmp) {
               return state_error(state, t, "Malloc failure.");
             }
@@ -857,10 +872,10 @@ state_value(State *state, Token *t)
           STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
           n_members = STRUCT_MEMBER(size_t, msg,
                                     state->field->quantifier_offset);
-          tmp = local_realloc(
+          tmp = local_reallocarray(
               STRUCT_MEMBER(protobuf_c_boolean *, msg, state->field->offset),
               (n_members - 1) * sizeof(protobuf_c_boolean),
-              n_members * sizeof(protobuf_c_boolean), state->allocator);
+              n_members, sizeof(protobuf_c_boolean), state->allocator);
           if (!tmp) {
             return state_error(state, t, "Malloc failure.");
           }
@@ -886,10 +901,10 @@ state_value(State *state, Token *t)
           STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
           n_members = STRUCT_MEMBER(size_t, msg,
                                     state->field->quantifier_offset);
-          pbbd = local_realloc(
+          pbbd = local_reallocarray(
               STRUCT_MEMBER(ProtobufCBinaryData *, msg, state->field->offset),
               (n_members - 1) * sizeof(ProtobufCBinaryData),
-              n_members * sizeof(ProtobufCBinaryData), state->allocator);
+              n_members, sizeof(ProtobufCBinaryData), state->allocator);
           if (!pbbd) {
             return state_error(state, t, "Malloc failure.");
           }
@@ -930,10 +945,10 @@ state_value(State *state, Token *t)
           STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
           n_members = STRUCT_MEMBER(size_t, msg,
                                     state->field->quantifier_offset);
-          s = local_realloc(
+          s = local_reallocarray(
               STRUCT_MEMBER(unsigned char **, msg, state->field->offset),
               (n_members - 1) * sizeof(unsigned char *),
-              n_members * sizeof(unsigned char *), state->allocator);
+              n_members, sizeof(unsigned char *), state->allocator);
           if (!s) {
             return state_error(state, t, "Malloc failure.");
           }
@@ -983,10 +998,10 @@ state_value(State *state, Token *t)
               STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
               n_members = STRUCT_MEMBER(size_t, msg,
                                         state->field->quantifier_offset);
-              vals = local_realloc(
+              vals = local_reallocarray(
                   STRUCT_MEMBER(uint32_t *, msg, state->field->offset),
                   (n_members - 1) * sizeof(uint32_t),
-                  n_members * sizeof(uint32_t), state->allocator);
+                  n_members, sizeof(uint32_t), state->allocator);
               if (!vals) {
                 return state_error(state, t, "Malloc failure.");
               }
@@ -1015,10 +1030,10 @@ state_value(State *state, Token *t)
             STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
             n_members = STRUCT_MEMBER(size_t, msg,
                                       state->field->quantifier_offset);
-            vals = local_realloc(
+            vals = local_reallocarray(
                 STRUCT_MEMBER(int32_t *, msg, state->field->offset),
                 (n_members - 1) * sizeof(int32_t),
-                n_members * sizeof(int32_t), state->allocator);
+                n_members, sizeof(int32_t), state->allocator);
             if (!vals) {
               return state_error(state, t, "Malloc failure.");
             }
@@ -1047,10 +1062,10 @@ state_value(State *state, Token *t)
               STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
               n_members = STRUCT_MEMBER(size_t, msg,
                                         state->field->quantifier_offset);
-              vals = local_realloc(
+              vals = local_reallocarray(
                   STRUCT_MEMBER(uint64_t *, msg, state->field->offset),
                   (n_members - 1) * sizeof(uint64_t),
-                  n_members * sizeof(uint64_t), state->allocator);
+                  n_members, sizeof(uint64_t), state->allocator);
               if (!vals) {
                 return state_error(state, t, "Malloc failure.");
               }
@@ -1079,10 +1094,10 @@ state_value(State *state, Token *t)
             STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
             n_members = STRUCT_MEMBER(size_t, msg,
                                       state->field->quantifier_offset);
-            vals = local_realloc(
+            vals = local_reallocarray(
                 STRUCT_MEMBER(int64_t *, msg, state->field->offset),
                 (n_members - 1) * sizeof(int64_t),
-                n_members * sizeof(int64_t), state->allocator);
+                n_members, sizeof(int64_t), state->allocator);
             if (!vals) {
               return state_error(state, t, "Malloc failure.");
             }
@@ -1110,10 +1125,10 @@ state_value(State *state, Token *t)
               STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
               n_members = STRUCT_MEMBER(size_t, msg,
                                         state->field->quantifier_offset);
-              vals = local_realloc(
+              vals = local_reallocarray(
                   STRUCT_MEMBER(float *, msg, state->field->offset),
                   (n_members - 1) * sizeof(float),
-                  n_members * sizeof(float), state->allocator);
+                  n_members,  sizeof(float), state->allocator);
               if (!vals) {
                 return state_error(state, t, "Malloc failure.");
               }
@@ -1142,10 +1157,10 @@ state_value(State *state, Token *t)
               STRUCT_MEMBER(size_t, msg, state->field->quantifier_offset) += 1;
               n_members = STRUCT_MEMBER(size_t, msg,
                                         state->field->quantifier_offset);
-              vals = local_realloc(
+              vals = local_reallocarray(
                   STRUCT_MEMBER(double *, msg, state->field->offset),
                   (n_members - 1) * sizeof(double),
-                  n_members * sizeof(double), state->allocator);
+                  n_members, sizeof(double), state->allocator);
               if (!vals) {
                 return state_error(state, t, "Malloc failure.");
               }
