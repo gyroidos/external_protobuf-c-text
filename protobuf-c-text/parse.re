@@ -421,6 +421,7 @@ token_start:
   QS = ["] (EQ|[^"])* ["];
   WS = [ \t];
 
+  *           { RETURN(TOK_MALLOC_ERR); }
   I | F       {
                 t.number = PBC_ALLOC((scanner->cursor - scanner->token) + 1);
                 if (!t.number) {
