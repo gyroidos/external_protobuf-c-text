@@ -181,11 +181,11 @@ token_free(Token *t, ProtobufCAllocator *allocator)
  * This structure is used by the scanner to maintain state.
  */
 typedef struct _Scanner {
-  unsigned char *cursor; /**< Where we are in the \c buffer. */
-  unsigned char *marker; /**< Used for backtracking. */
-  unsigned char *buffer; /**< The buffer holding the data being parsed. */
-  unsigned char *limit;  /**< Where the buffer ends. */
-  unsigned char *token;  /**< Pointer to the start of the current token. */
+  char *cursor; /**< Where we are in the \c buffer. */
+  char *marker; /**< Used for backtracking. */
+  char *buffer; /**< The buffer holding the data being parsed. */
+  char *limit;  /**< Where the buffer ends. */
+  char *token;  /**< Pointer to the start of the current token. */
   FILE *f;  /**< For file scanners, this is the input source.  Data read
               from it is put in \c buffer. */
   int line; /**< Current line number being parsed. Used for error
@@ -251,12 +251,12 @@ scanner_free(Scanner *scanner, ProtobufCAllocator *allocator)
  *         allocator you called this with.
  */
 static ProtobufCBinaryData *
-unesc_str(unsigned char *src, int len, ProtobufCAllocator *allocator)
+unesc_str(char *src, int len, ProtobufCAllocator *allocator)
 {
   ProtobufCBinaryData *dst_pbbd;
   unsigned char *dst;
   int i = 0, dst_len = 0;
-  unsigned char oct[4];
+  char oct[4];
 
   dst_pbbd = PBC_ALLOC(sizeof(ProtobufCBinaryData));
   dst = PBC_ALLOC(len + 1);
@@ -383,7 +383,7 @@ fill(Scanner *scanner, ProtobufCAllocator *allocator)
 /** Return the token. */
 #define RETURN(tt) { t.id = tt; return t; }
 /** Retrieves more input if available. */
-#define YYFILL(n) { fill_result = fill(scanner, allocator); \
+#define YYFILL { fill_result = fill(scanner, allocator); \
                     if (fill_result <= 0) \
                       RETURN((fill_result == -1? TOK_MALLOC_ERR: TOK_EOF)); }
 
@@ -401,6 +401,8 @@ scan(Scanner *scanner, ProtobufCAllocator *allocator)
   Token t;
   int fill_result;
 
+  memset(&t, 0, sizeof(t));
+
 token_start:
   scanner->token = scanner->cursor;
 
@@ -408,10 +410,11 @@ token_start:
    * the QS re should be ["] (EQ|[^"]|NL)* ["]; */
 
   /*!re2c
-  re2c:define:YYCTYPE   = "unsigned char";
+  re2c:define:YYCTYPE   = char;
   re2c:define:YYCURSOR  = scanner->cursor;
   re2c:define:YYLIMIT   = scanner->limit;
   re2c:define:YYMARKER  = scanner->marker;
+  re2c:define:YYFILL:naked = 1;
 
   I = [-]? [0-9]+;
   F = [-]? [0-9]* "." [0-9]+;
@@ -579,7 +582,7 @@ state_free(State *state)
 static StateId state_error(State *state, Token *t, char *error_fmt, ...)
   __attribute__((format(printf, 3, 4)));
 static StateId
-state_error(State *state, Token *t, char *error_fmt, ...)
+state_error(State *state, Token *t __attribute__((unused)), char *error_fmt, ...)
 {
   va_list args;
   int error_idx;
@@ -689,6 +692,9 @@ state_assignment(State *state, Token *t)
       if (state->field->type == PROTOBUF_C_TYPE_MESSAGE) {
         ProtobufCMessage **tmp;
         size_t n_members;
+
+	tmp = NULL;
+	n_members = 0;
 
         /* Don't assign over an existing message. */
         if (state->field->label == PROTOBUF_C_LABEL_OPTIONAL
