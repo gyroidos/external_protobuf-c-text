@@ -107,7 +107,7 @@ static char *
 esc_str(unsigned char *src, int len, ProtobufCAllocator *allocator)
 {
   int i, escapes = 0, dst_len = 0;
-  unsigned char *dst;
+  char *dst;
 
   for (i = 0; i < len; i++) {
     if (!isprint(src[i])) {
@@ -181,7 +181,7 @@ protobuf_c_text_to_string_internal(ReturnString *rs,
     const ProtobufCMessageDescriptor *d,
     ProtobufCAllocator *allocator)
 {
-  int i;
+  size_t i;
   size_t j, quantifier_offset;
   double float_var;
   const ProtobufCFieldDescriptor *f;
@@ -218,6 +218,8 @@ protobuf_c_text_to_string_internal(ReturnString *rs,
         if (!STRUCT_MEMBER(size_t, m, f[i].quantifier_offset)) {
           continue;
         }
+        break;
+      default:
         break;
     }
 
@@ -378,11 +380,11 @@ protobuf_c_text_to_string_internal(ReturnString *rs,
       case PROTOBUF_C_TYPE_STRING:
         if (f[i].label == PROTOBUF_C_LABEL_REPEATED) {
           for (j = 0; j < quantifier_offset; j++) {
-            unsigned char *escaped;
+            char *escaped;
 
             escaped = esc_str(
                 STRUCT_MEMBER(unsigned char **, m, f[i].offset)[j],
-                strlen(STRUCT_MEMBER(unsigned char **, m, f[i].offset)[j]),
+                strlen(STRUCT_MEMBER(char **, m, f[i].offset)[j]),
                 allocator);
             if (!escaped) {
               PBC_FREE(rs->s);
@@ -396,10 +398,10 @@ protobuf_c_text_to_string_internal(ReturnString *rs,
             PBC_FREE(escaped);
           }
         } else {
-          unsigned char *escaped;
+          char *escaped;
 
           escaped = esc_str(STRUCT_MEMBER(unsigned char *, m, f[i].offset),
-              strlen(STRUCT_MEMBER(unsigned char *, m, f[i].offset)),
+              strlen(STRUCT_MEMBER(char *, m, f[i].offset)),
               allocator);
           if (!escaped) {
             PBC_FREE(rs->s);
@@ -416,7 +418,7 @@ protobuf_c_text_to_string_internal(ReturnString *rs,
       case PROTOBUF_C_TYPE_BYTES:
         if (f[i].label == PROTOBUF_C_LABEL_REPEATED) {
           for (j = 0; j < quantifier_offset; j++) {
-            unsigned char *escaped;
+            char *escaped;
 
             escaped = esc_str(
                 STRUCT_MEMBER(ProtobufCBinaryData *, m, f[i].offset)[j].data,
@@ -434,7 +436,7 @@ protobuf_c_text_to_string_internal(ReturnString *rs,
             PBC_FREE(escaped);
           }
         } else {
-          unsigned char *escaped;
+          char *escaped;
 
           escaped = esc_str(
               STRUCT_MEMBER(ProtobufCBinaryData, m, f[i].offset).data,
