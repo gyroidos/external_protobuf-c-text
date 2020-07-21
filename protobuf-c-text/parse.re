@@ -962,6 +962,13 @@ state_value(State *state, Token *t)
           return STATE_OPEN;
         } else {
           unsigned char *s;
+          unsigned char *old_ptr = STRUCT_MEMBER(unsigned char*, msg,
+                                                 state->field->offset);
+          if(old_ptr && old_ptr != state->field->default_value){
+             return state_error(state, t,
+                 "Field '%s' has already been assigned.",
+                 state->field->name);
+          }
 
           s = ST_ALLOC(t->qs->len + 1);
           if (!s) {
