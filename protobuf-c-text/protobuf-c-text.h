@@ -130,6 +130,27 @@ typedef struct _ProtobufCTextError {
                          - >0: Message has all required fields set. */
 } ProtobufCTextError;
 
+/** Frees all provided buffers (error codes and error information) as well as the
+ * struct itself.
+ *
+ * This frees the entire ProtobufCTextError result which is returned when a parse
+ * fails.
+ *
+ * \param[in] The result / error message of a parse attempt
+ */
+extern void
+protobuf_c_text_free_ProtobufCTextError(ProtobufCTextError *err);
+
+/** Frees all internal data (error codes and error information), not the struct
+ *
+ * This frees the contents of the ProtobufCTextError result which is returned
+ * when a parse fails.
+ *
+ * \param[in] The result / error message of a parse attempt
+ */
+extern void
+protobuf_c_text_free_ProtobufCTextError_data(ProtobufCTextError *err);
+
 /** Convert a \c ProtobufCMessage to a string.
  *
  * Given a \c ProtobufCMessage serialise it as a text format protobuf.

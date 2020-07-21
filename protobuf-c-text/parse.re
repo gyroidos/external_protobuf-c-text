@@ -1296,3 +1296,21 @@ protobuf_c_text_from_string(const ProtobufCMessageDescriptor *descriptor,
   scanner_init_string(&scanner, msg);
   return protobuf_c_text_parse(descriptor, &scanner, result, allocator);
 }
+
+
+void
+protobuf_c_text_free_ProtobufCTextError(ProtobufCTextError *err){
+    if(err){
+        protobuf_c_text_free_ProtobufCTextError_data(err);
+        free(err);
+    }
+}
+
+void
+protobuf_c_text_free_ProtobufCTextError_data(ProtobufCTextError *err){
+    if(err){
+        free(err->error);
+        free(err->error_txt);
+    }
+}
+
