@@ -962,6 +962,13 @@ state_value(State *state, Token *t)
           return STATE_OPEN;
         } else {
           unsigned char *s;
+          unsigned char *old_ptr = STRUCT_MEMBER(unsigned char*, msg,
+                                                 state->field->offset);
+          if(old_ptr && old_ptr != state->field->default_value){
+             return state_error(state, t,
+                 "Field '%s' has already been assigned.",
+                 state->field->name);
+          }
 
           s = ST_ALLOC(t->qs->len + 1);
           if (!s) {
@@ -1296,3 +1303,21 @@ protobuf_c_text_from_string(const ProtobufCMessageDescriptor *descriptor,
   scanner_init_string(&scanner, msg);
   return protobuf_c_text_parse(descriptor, &scanner, result, allocator);
 }
+
+
+void
+protobuf_c_text_free_ProtobufCTextError(ProtobufCTextError *err){
+    if(err){
+        protobuf_c_text_free_ProtobufCTextError_data(err);
+        free(err);
+    }
+}
+
+void
+protobuf_c_text_free_ProtobufCTextError_data(ProtobufCTextError *err){
+    if(err){
+        free(err->error);
+        free(err->error_txt);
+    }
+}
+
